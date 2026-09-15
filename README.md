@@ -1,12 +1,12 @@
 # AI Anti Fraud 3.0 - An A-Corp OWASP Cornucopia Android Scenario
 
-F-Corp Ltd just finished coding their brand new multitenanted AI application
+A-Corp Ltd just finished coding their brand new multitenanted AI application
 "AI Anti-Fraud 3.0" for Fintech customers. PwnedNext, a European company
 selling solutions to banks and financial institutions, is considering buying
 A-Corp.
 
 Article 9 of the AI Act requires risk management for a high-risk AI system.
-F-Corp missed threat modelling entirely, so its CTO has gathered the junior
+A-Corp missed threat modelling entirely, so its CTO has gathered the junior
 developers and testers for an OWASP Cornucopia session.
 
 You are those junior developers.
