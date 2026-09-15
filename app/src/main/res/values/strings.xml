@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">AI Anti Fraud 3.0</string>
+    <string name="app_title">AI Anti Fraud 3.0</string>
+    <string name="app_subtitle">A-Corp transaction security</string>
+    <string name="question_hint">Ask about a transaction</string>
+    <string name="investigate">Review transaction</string>
+</resources>

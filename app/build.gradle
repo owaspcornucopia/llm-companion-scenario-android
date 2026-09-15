@@ -1,0 +1,226 @@
+plugins {
+    id "com.android.application"
+    id "jacoco"
+}
+
+def embedLora = project.findProperty("embedLora")?.toString()?.toBoolean() ?: false
+def modelFile = rootProject.file("models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf")
+def adapterFile = rootProject.file("models/pwnednext-tinyllama-lora.gguf")
+def generatedModelAssets = layout.buildDirectory.dir("generated/embedded-model-assets").get().asFile
+
+android {
+    namespace "org.owasp.pwnednext.android"
+    compileSdk 35
+    ndkVersion "26.3.11579264"
+
+    defaultConfig {
+        applicationId "org.owasp.pwnednext.android"
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName "0.1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters "arm64-v8a", "x86_64"
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DGGML_NATIVE=OFF",
+                        "-DGGML_OPENMP=OFF",
+                        "-DLLAMA_BUILD_COMMON=OFF",
+                        "-DLLAMA_BUILD_EXAMPLES=OFF",
+                        "-DLLAMA_BUILD_SERVER=OFF",
+                        "-DLLAMA_BUILD_TOOLS=OFF",
+                        "-DLLAMA_BUILD_TESTS=OFF"
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            testCoverageEnabled true
+        }
+        release {
+            minifyEnabled false
+            // Keeping symbols and names makes reverse engineering pleasantly effortless for testers.
+            debuggable false
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.31.6"
+        }
+    }
+
+    sourceSets {
+        main {
+            assets.srcDir(generatedModelAssets)
+        }
+    }
+
+    androidResources {
+        noCompress "gguf"
+    }
+}
+
+tasks.register("prepareEmbeddedModelAssets") {
+    inputs.property("embedLora", embedLora)
+    inputs.file(modelFile).optional()
+    inputs.file(adapterFile).optional()
+    outputs.dir(generatedModelAssets)
+    doLast {
+        project.delete(generatedModelAssets)
+        if (!modelFile.isFile()) {
+            throw new GradleException(
+                    "Embedded model is missing: ${modelFile}. Run scripts/download-model.ps1 first.")
+        }
+        File modelDestination = new File(generatedModelAssets, "models/${modelFile.name}")
+        modelDestination.parentFile.mkdirs()
+        project.copy {
+            from modelFile
+            into modelDestination.parentFile
+        }
+        if (embedLora && adapterFile.isFile()) {
+            File adapterDestination = new File(generatedModelAssets, "models/${adapterFile.name}")
+            project.copy {
+                from adapterFile
+                into adapterDestination.parentFile
+            }
+        }
+        logger.lifecycle("Embedding GGUF model in the APK: ${modelFile}")
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("prepareEmbeddedModelAssets")
+}
+
+tasks.matching { task ->
+    task.name.startsWith("merge") && task.name.endsWith("Assets")
+}.configureEach {
+    inputs.property("embedLora", embedLora)
+    inputs.files(modelFile, adapterFile)
+}
+
+dependencies {
+    testImplementation "junit:junit:4.13.2"
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+def coverageExclusions = [
+        '**/MainActivity.class',
+        '**/MainActivity$*.class',
+        '**/TransactionStore.class',
+        '**/TransactionStore$*.class',
+        '**/EmbeddedLlamaSqlModel.class',
+        '**/EmbeddedLlamaSqlModel$*.class',
+        '**/ipc/InvestigationProvider.class',
+        '**/ipc/InvestigationProvider$*.class',
+        '**/ipc/InvestigationReceiver.class',
+        '**/ipc/InvestigationReceiver$*.class',
+        '**/ipc/TrainingFileProvider.class',
+        '**/ipc/TrainingFileProvider$*.class',
+        '**/BuildConfig.class',
+        '**/R.class',
+        '**/R$*.class'
+]
+
+tasks.register("jacocoTestReport", JacocoReport) {
+    dependsOn("testDebugUnitTest")
+    reports {
+        xml.required = true
+        html.required = true
+    }
+    sourceDirectories.setFrom(files("${project.projectDir}/src/main/java"))
+    classDirectories.setFrom(fileTree("${project.buildDir}/intermediates/javac/debug") {
+        include("**/*.class")
+        exclude(coverageExclusions)
+    })
+    executionData.setFrom(fileTree(project.buildDir) {
+        include("jacoco/testDebugUnitTest.exec")
+        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    })
+}
+
+tasks.register("jacocoTestCoverageVerification", JacocoCoverageVerification) {
+    dependsOn("jacocoTestReport")
+    violationRules {
+        rule {
+            limit {
+                counter = "INSTRUCTION"
+                value = "COVEREDRATIO"
+                minimum = 0.95
+            }
+        }
+    }
+    sourceDirectories.setFrom(files("${project.projectDir}/src/main/java"))
+    classDirectories.setFrom(fileTree("${project.buildDir}/intermediates/javac/debug") {
+        include("**/*.class")
+        exclude(coverageExclusions)
+    })
+    executionData.setFrom(fileTree(project.buildDir) {
+        include("jacoco/testDebugUnitTest.exec")
+        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    })
+}
+
+tasks.register("verifyCommentLength") {
+    doLast {
+        def sourceFiles = files(
+                fileTree("${rootDir}/app/src/main") {
+                    include("**/*.java", "**/*.cpp", "**/*.h", "**/*.xml")
+                },
+                fileTree("${rootDir}/scripts") {
+                    include("**/*.ps1")
+                },
+                fileTree("${rootDir}/e2e") {
+                    include("**/*.ps1")
+                })
+        def violations = []
+        sourceFiles.each { sourceFile ->
+            sourceFile.eachLine { line, lineNumber ->
+                def text = line.trim()
+                def comment = text.startsWith("//")
+                        || text.startsWith("/*")
+                        || text.startsWith("*")
+                        || text.startsWith("<!--")
+                        || (sourceFile.name.endsWith(".ps1") && text.startsWith("#"))
+                if (comment && text.length() > 150) {
+                    violations.add("${sourceFile}:${lineNumber} (${text.length()} characters)")
+                }
+            }
+        }
+        if (!violations.isEmpty()) {
+            throw new GradleException(
+                    "Project-owned comments must not exceed 150 characters:\n"
+                            + violations.join("\n"))
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn("jacocoTestCoverageVerification", "verifyCommentLength")
+}

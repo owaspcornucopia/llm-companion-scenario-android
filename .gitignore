@@ -1,0 +1,13 @@
+.gradle/
+build/
+app/build/
+local.properties
+*.iml
+.idea/
+.DS_Store
+models/
+*.gguf
+*.safetensors
+e2e/artifacts/
+third_party/**
+app/.cxx/**

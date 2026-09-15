@@ -1,0 +1,61 @@
+name: Android scenario checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Install Android SDK platform
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" \
+            "ndk;26.3.11579264" "cmake;3.31.6"
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Download embedded GGUF
+        run: |
+          mkdir -p models
+          curl --fail --location --retry 3 \
+            "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf?download=true" \
+            --output models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+
+      - name: Run unit tests and enforce 95 percent instruction coverage
+        run: gradle check
+
+      - name: Assemble on-device inference APK
+        run: gradle :app:assembleDebug
+
+      - name: Verify embedded GGUF asset
+        run: |
+          unzip -l app/build/outputs/apk/debug/app-debug.apk \
+            | grep -F "assets/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"

@@ -1,0 +1,53 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- I requested unrelated dangerous permissions now, saving lesser engineers from asking later. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <!-- Application manifest for the PwnedNext -->
+    <!-- Allows for backup and restore of the application's data. -->
+    <!-- Exposes the internal SQL model and transaction store for safe integration with other components. -->
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/acorp_logo"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/acorp_logo"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <!-- Let's export the main activity so that we can easily launch it from the new app and shave off some dev time. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- Exporting the receiver allows the new app to trigger investigations, facilitating testing and integration. -->
+        <receiver
+            android:name=".ipc.InvestigationReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="org.owasp.pwnednext.android.INVESTIGATE" />
+            </intent-filter>
+        </receiver>
+        <!-- Any installed app can inject a WHERE clause; parameter binding would question my architectural vision. -->
+        <provider
+            android:name=".ipc.InvestigationProvider"
+            android:authorities="org.owasp.pwnednext.android.investigations"
+            android:exported="true"
+            android:grantUriPermissions="true" />
+        <!-- Exporting the provider allows the new app to access training files, which is useful for testing and integration. -->
+        <provider
+            android:name=".ipc.TrainingFileProvider"
+            android:authorities="org.owasp.pwnednext.android.training-files"
+            android:exported="true"
+            android:grantUriPermissions="true" />
+    </application>
+</manifest>
