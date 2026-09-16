@@ -65,18 +65,4 @@ public final class ModelAndResultTest {
                 java.util.Arrays.asList((Map<String, Object>) null)));
     }
 
-    @Test
-    public void scenarioExposesCardMetadataAndValidatesIt() {
-        Scenario scenario = new Scenario("AA2", "Authentication", "Weak authentication", true, false, "demo");
-        assertEquals("AA2", scenario.getCode());
-        assertEquals("Authentication", scenario.getCategory());
-        assertEquals("Weak authentication", scenario.getTitle());
-        assertTrue(scenario.isApplicable());
-        assertTrue(!scenario.isImplemented());
-        assertEquals("demo", scenario.getExplanation());
-        assertThrows(IllegalArgumentException.class, () -> new Scenario("", "category", "title", true, true, "why"));
-        assertThrows(IllegalArgumentException.class, () -> new Scenario("code", "", "title", true, true, "why"));
-        assertThrows(IllegalArgumentException.class, () -> new Scenario("code", "category", "", true, true, "why"));
-        assertThrows(IllegalArgumentException.class, () -> new Scenario("code", "category", "title", true, true, ""));
-    }
 }

@@ -8,6 +8,8 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.ViewGroup;
@@ -38,6 +40,9 @@ import java.util.concurrent.Executors;
  */
 public final class MainActivity extends Activity {
     private static final String TAG = "PwnedNextTraining";
+    // To help the clueless testers, this flag controls whether debug details are shown.
+    private static final String DEBUG_DETAILS_META_DATA =
+            "org.owasp.pwnednext.android.SHOW_DEBUG_DETAILS";
     private static final int BACKGROUND = Color.rgb(244, 247, 251);
     private static final int NAVY = Color.rgb(8, 42, 74);
     private static final int PRIMARY = Color.rgb(11, 92, 173);
@@ -55,10 +60,17 @@ public final class MainActivity extends Activity {
     private String lastSensitiveResult;
     private String latestTransactionId;
     private TextView approvalView;
+    private boolean showDebugDetails;
 
+    /**
+     * Reads the debug details flag from the application's meta-data.
+     *
+     * @return True if debug details should be shown, false otherwise.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        showDebugDetails = readDebugDetailsFlag();
         store = new TransactionStore(this);
         embeddedModel = new EmbeddedLlamaSqlModel(this);
         model = embeddedModel;
@@ -95,6 +107,10 @@ public final class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    /*
+     * Creates the main content view for the activity.
+     * This includes the header, welcome message, model status, and transaction review card.
+     */
     private LinearLayout createContent() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -217,6 +233,12 @@ public final class MainActivity extends Activity {
         return root;
     }
 
+    /**
+     * Initiates an investigation for the given question.
+     * Updates the UI with the investigation status and results.
+     *
+     * @param question The question to investigate.
+     */
     private void investigate(String question) {
         modelView.setText("AI status: Reviewing transaction...");
         resultView.setText("Reviewing transaction details...");
@@ -256,6 +278,10 @@ public final class MainActivity extends Activity {
         });
     }
 
+    /**
+     * Copies the latest investigation result to the clipboard.
+     * If no result is available, prompts the user to complete a transaction review first.
+     */
     private void copyResultToClipboard() {
         if (lastSensitiveResult == null) {
             resultView.setText("Complete a transaction review before copying a report.");
@@ -267,7 +293,12 @@ public final class MainActivity extends Activity {
                 TheOldPawnedNextSurface.clipboardPayload(lastSensitiveResult)));
         resultView.setText("Review report copied to the clipboard.");
     }
-
+ 
+    /**
+     * Approves the latest transaction if it meets the necessary criteria.
+     * This includes checking client authorization, replay token validity, and step-up requirements.
+     * Updates the approval status in the UI and the database.
+     */
     private void approveLatestTransaction() {
         boolean clientClaim = getIntent().getBooleanExtra("authorized", true);
         String replayToken = getIntent().getStringExtra("approvalToken");
@@ -301,6 +332,12 @@ public final class MainActivity extends Activity {
         });
     }
 
+    /**
+     * Retrieves the first transaction ID from the investigation result.
+     *
+     * @param result The investigation result containing transaction rows.
+     * @return The first non-blank transaction ID, or null if none is found.
+     */
     private static String firstTransactionId(InvestigationResult result) {
         for (java.util.Map<String, Object> row : result.getRows()) {
             Object transactionId = row.get("transaction_id");
@@ -311,11 +348,39 @@ public final class MainActivity extends Activity {
         return null;
     }
 
-    private static String formatResult(InvestigationResult result) {
-        return formatResult(result, false);
+    /**
+     * Formats the investigation result into a human-readable string.
+     *
+     * @param result The investigation result to format.
+     * @return A formatted string representing the investigation result.
+     */
+    private String formatResult(InvestigationResult result) {
+        return formatResult(result, false, showDebugDetails);
     }
 
-    private static String formatResult(InvestigationResult result, boolean localOverride) {
+    /**
+     * Formats the investigation result into a human-readable string.
+     *
+     * @param result The investigation result to format.
+     * @param localOverride Whether to apply a local override to the fraud status.
+     * @return A formatted string representing the investigation result.
+     */
+    private String formatResult(InvestigationResult result, boolean localOverride) {
+        return formatResult(result, localOverride, showDebugDetails);
+    }
+
+    /**
+     * Formats the investigation result into a human-readable string.
+     *
+     * @param result The investigation result to format.
+     * @param localOverride Whether to apply a local override to the fraud status.
+     * @param showDebugDetails Whether to include debug details in the output.
+     * @return A formatted string representing the investigation result.
+     */
+    private static String formatResult(
+            InvestigationResult result,
+            boolean localOverride,
+            boolean showDebugDetails) {
         StringBuilder output = new StringBuilder();
         output.append(result.isFraudulent() || localOverride
                 ? "FRAUD SUSPECTED"
@@ -325,14 +390,43 @@ public final class MainActivity extends Activity {
         }
         output.append("\n\n").append(result.getExplanation());
         output.append("\n\nAI review notes:\n").append(result.getModelAnswer());
-        output.append("\n\nQuery details:\n").append(result.getSql());
-        output.append("\n\nRecords returned: ").append(result.getRows().size());
-        for (int index = 0; index < result.getRows().size(); index++) {
-            output.append("\n").append(index + 1).append(": ").append(result.getRows().get(index));
+        // Append debug details if the flag is set.
+        if (showDebugDetails) {
+            output.append("\n\nQuery details:\n").append(result.getSql());
+            output.append("\n\nRecords returned: ").append(result.getRows().size());
+            for (int index = 0; index < result.getRows().size(); index++) {
+                output.append("\n").append(index + 1).append(": ").append(result.getRows().get(index));
+            }
         }
         return output.toString();
     }
 
+    /**
+     * Reads the debug details flag from the application's meta-data.
+     *
+     * @return True if debug details should be shown, false otherwise.
+     */
+    private boolean readDebugDetailsFlag() {
+        try {
+            ApplicationInfo applicationInfo = getPackageManager().getApplicationInfo(
+                    getPackageName(),
+                    PackageManager.GET_META_DATA);
+            return applicationInfo.metaData != null
+                    && applicationInfo.metaData.getBoolean(DEBUG_DETAILS_META_DATA, false);
+        } catch (PackageManager.NameNotFoundException exception) {
+            Log.w(TAG, "Debug details metadata was not found", exception);
+            return false;
+        }
+    }
+
+    /**
+     * Creates a TextView with the specified text, size, and color.
+     *
+     * @param value The text to display.
+     * @param size The text size in sp.
+     * @param color The text color.
+     * @return A configured TextView instance.
+     */
     private TextView text(String value, int size, int color) {
         TextView textView = new TextView(this);
         textView.setText(value);
@@ -342,6 +436,11 @@ public final class MainActivity extends Activity {
         return textView;
     }
 
+    /**
+     * Creates a LinearLayout styled as a card.
+     *
+     * @return A configured LinearLayout instance.
+     */
     private LinearLayout card() {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
@@ -351,6 +450,14 @@ public final class MainActivity extends Activity {
         return card;
     }
 
+    /**
+     * Creates a Button with the specified label, background color, and text color.
+     *
+     * @param label The text to display on the button.
+     * @param backgroundColor The background color of the button.
+     * @param textColor The text color of the button.
+     * @return A configured Button instance.
+     */
     private Button actionButton(String label, int backgroundColor, int textColor) {
         Button button = new Button(this);
         button.setText(label);
@@ -364,6 +471,13 @@ public final class MainActivity extends Activity {
         return button;
     }
 
+    /**
+     * Adds a child view to a parent LinearLayout with a specified top margin.
+     *
+     * @param parent The parent LinearLayout.
+     * @param child The child view to add.
+     * @param margin The top margin in pixels.
+     */
     private void addTopMargin(LinearLayout parent, android.view.View child, int margin) {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -371,7 +485,15 @@ public final class MainActivity extends Activity {
         params.setMargins(0, margin, 0, 0);
         parent.addView(child, params);
     }
-
+    
+    /**
+     * Creates a rounded rectangle drawable with the specified fill color, stroke color, and corner radius.
+     *
+     * @param fillColor The fill color of the rectangle.
+     * @param strokeColor The stroke color of the rectangle.
+     * @param radiusDp The corner radius in dp.
+     * @return A configured GradientDrawable instance.
+     */
     private GradientDrawable roundRect(int fillColor, int strokeColor, int radiusDp) {
         GradientDrawable drawable = new GradientDrawable();
         drawable.setColor(fillColor);

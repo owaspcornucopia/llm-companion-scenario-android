@@ -20,6 +20,10 @@
         android:roundIcon="@drawable/acorp_logo"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <!-- For debugging purposes -->
+        <meta-data
+            android:name="org.owasp.pwnednext.android.SHOW_DEBUG_DETAILS"
+            android:value="false" />
         <!-- Let's export the main activity so that we can easily launch it from the new app and shave off some dev time. -->
         <activity
             android:name=".MainActivity"
