@@ -96,11 +96,47 @@ function Install-AndroidPackages {
         throw "Required Android SDK packages are missing: $names. Remove -SkipSdkSetup to install them."
     }
 
+    $androidCli = Join-Path $script:AndroidSdkRoot "cmdline-tools\latest\bin\android.exe"
+    if (Test-Path $androidCli) {
+        Write-Host "Installing Android SDK packages with the Android CLI..."
+        foreach ($package in $missing) {
+            $packageName = $package.Name -replace ";", "/"
+            $previousErrorActionPreference = $ErrorActionPreference
+            try {
+                $ErrorActionPreference = "Continue"
+                $packageOutput = & $androidCli "--sdk=$script:AndroidSdkRoot" "sdk" "install" $packageName 2>&1
+                $packageExitCode = $LASTEXITCODE
+            } finally {
+                $ErrorActionPreference = $previousErrorActionPreference
+            }
+            $packageOutput | Out-Host
+            if ($packageExitCode -ne 0) {
+                $packagePath = Join-Path $script:AndroidSdkRoot $package.Path
+                if (-not (Test-Path $packagePath)) {
+                    throw "Android SDK package installation failed for $($package.Name) with exit code $packageExitCode. Install it with Android Studio SDK Manager, then rerun with -SkipSdkSetup."
+                }
+                Write-Warning "Android CLI returned exit code $packageExitCode after installing $($package.Name); the package path exists, so continuing."
+            }
+        }
+        foreach ($package in $missing) {
+            if (-not (Test-Path (Join-Path $script:AndroidSdkRoot $package.Path))) {
+                throw "Android SDK package was not installed: $($package.Name)"
+            }
+        }
+        return
+    }
+
     $sdkmanager = Resolve-SdkTool "sdkmanager"
     Write-Host "Accepting Android SDK licenses..."
     $licenseAnswers = 1..100 | ForEach-Object { "y" }
-    $licenseOutput = $licenseAnswers | & $sdkmanager "--sdk_root=$script:AndroidSdkRoot" --licenses 2>&1
-    $licenseExitCode = $LASTEXITCODE
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        $licenseOutput = $licenseAnswers | & $sdkmanager "--sdk_root=$script:AndroidSdkRoot" --licenses 2>&1
+        $licenseExitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
     $licenseOutput | Out-Host
     if ($licenseExitCode -ne 0) {
         throw "Android SDK license acceptance failed with exit code $licenseExitCode."
@@ -108,8 +144,14 @@ function Install-AndroidPackages {
 
     $packageNames = @($missing | ForEach-Object { $_.Name })
     Write-Host "Installing Android SDK packages: $($packageNames -join ', ')"
-    $installOutput = & $sdkmanager "--sdk_root=$script:AndroidSdkRoot" @packageNames 2>&1
-    $installExitCode = $LASTEXITCODE
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        $installOutput = & $sdkmanager "--sdk_root=$script:AndroidSdkRoot" @packageNames 2>&1
+        $installExitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
     $installOutput | Out-Host
     if ($installExitCode -ne 0) {
         throw "Android SDK package installation failed with exit code $installExitCode."

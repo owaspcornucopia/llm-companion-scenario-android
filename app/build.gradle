@@ -86,7 +86,9 @@ android {
 tasks.register("prepareEmbeddedModelAssets") {
     inputs.property("embedLora", embedLora)
     inputs.file(modelFile).optional()
-    inputs.file(adapterFile).optional()
+    if (embedLora && adapterFile.isFile()) {
+        inputs.file(adapterFile)
+    }
     outputs.dir(generatedModelAssets)
     doLast {
         project.delete(generatedModelAssets)
@@ -119,7 +121,10 @@ tasks.matching { task ->
     task.name.startsWith("merge") && task.name.endsWith("Assets")
 }.configureEach {
     inputs.property("embedLora", embedLora)
-    inputs.files(modelFile, adapterFile)
+    inputs.file(modelFile)
+    if (embedLora && adapterFile.isFile()) {
+        inputs.file(adapterFile)
+    }
 }
 
 dependencies {
