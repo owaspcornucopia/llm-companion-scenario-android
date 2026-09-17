@@ -7,7 +7,7 @@ provider.
 
 ## Build the APK
 
-Initialize the native dependency and install the Android toolchain:
+Initialise the native dependency and install the Android toolchain:
 
 ```powershell
 git submodule update --init --recursive
