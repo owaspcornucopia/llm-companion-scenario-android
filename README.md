@@ -1,13 +1,15 @@
 # AI Anti Fraud 3.0 - An A-Corp OWASP Cornucopia Android Scenario
 
-F-Corp Ltd just finished coding their brand new multitenanted AI application
-"AI Anti-Fraud 3.0" for Fintech customers. PwnedNext, a European company
-selling solutions to banks and financial institutions, is considering buying
-A-Corp.
+A-Corp Ltd has finished building its new multitenant AI application, **AI Anti
+Fraud 3.0**, for fintech customers. PwnedNext, a European company selling
+solutions to banks and financial institutions, is considering buying A-Corp.
 
 Article 9 of the AI Act requires risk management for a high-risk AI system.
-F-Corp missed threat modelling entirely, so its CTO has gathered the junior
-developers and testers for an OWASP Cornucopia session.
+A-Corp skipped threat modelling because the deadline looked more important
+so now the CEO is panicking!
+Luckily the CTO has heard of a card game called OWASP Corncuopia that makes
+AI threat modeling easy and has gathered junior developers and testers for 
+an OWASP Cornucopia session.
 
 You are those junior developers.
 
@@ -96,14 +98,13 @@ Try these questions:
 | `app/src/main/java/.../data/TransactionStore.java` | local SQLite store |
 | `app/src/main/java/.../ipc/` | Exported receiver and provider |
 | `app/src/main/java/.../service/` | Model-to-SQL-to-decision pipeline |
-| `app/src/main/java/.../scenario/ScenarioCatalog.java` | In-app applicable/non-applicable card reminders |
 | `app/src/test/` | Pure-Java scenario tests |
 | `scripts/download-model.ps1` | Downloads a small Hugging Face GGUF and the optional LoRA files |
 | `scripts/build-embedded-apk.ps1` | Downloads missing weights and builds the single-APK model variant |
 | `scripts/start-emulator.ps1` | Builds, boots, installs, and launches the app |
-| `docs/diagrams/data-flow.svg` | DFD with trust boundaries and STRIDE markers |
+| `docs/diagrams/data-flow.svg` | DFD with trust boundaries |
 | `docs/diagrams/sequence.svg` | SVG sequence diagram embedded below |
-| `docs/` | Detailed threat and testing guidance |
+| `docs/` | Detailed testing guidance |
 
 ## Build and test
 
@@ -325,3 +326,14 @@ Run this project only with synthetic transactions in an isolated emulator. Do no
 connect it to a real bank, real credentials, or a production model. The
 comments are intentionally blunt and overconfident to help you, who are not
 reading every line of Java, understand why each insecure choice exists.
+
+## License
+
+This work is a derivative of OWASP Cornucopia, used under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license.
+This derivative work is also published under the same CC BY-SA 4.0 license.
+While this license explicitly permits free commercial use, a significant amount of time and effort went into adapting and maintaining this resource.
+If your organization derives commercial value from this material (e.g., for internal training, client audits, or commercial services), we kindly request that you consider supporting our ongoing work with a [voluntary donation](https://owasp.org/donate/?reponame=cornucopia&title=OWASP+Cornucopia).
+
+## Attribution
+
+The idea is based on [Engineers & Exploits](https://github.com/northdpole/engineers-and-exploits-the-quest-for-security) - A Cornucopia workshop.

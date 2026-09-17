@@ -26,12 +26,12 @@ sequenceDiagram
     DB-->>Decision: Transaction rows
     Decision-->>UI: Verdict, SQL, and rows
     IPC->>UI: Untrusted question and approval extras
-    UI->>Clipboard: Full result without sensitive flag
+    UI->>Clipboard: Full result
     UI->>Prefs: Last result and fraud override
 ```
 
-This diagram is intentionally a threat map as well as an architecture sketch.
-Every arrow is a place where the lab lets untrusted data cross a boundary:
+This diagram is intentionally a map as well as an architecture sketch.
+Every arrow is a place where the app lets data cross boundaries:
 
 * the tester controls the natural-language prompt;
 * the parser accepts several permissive response formats;

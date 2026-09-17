@@ -8,6 +8,5 @@ local.properties
 models/
 *.gguf
 *.safetensors
-e2e/artifacts/
 third_party/**
 app/.cxx/**

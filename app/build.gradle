@@ -200,10 +200,7 @@ tasks.register("verifyCommentLength") {
                 },
                 fileTree("${rootDir}/scripts") {
                     include("**/*.ps1")
-                },
-                fileTree("${rootDir}/e2e") {
-                    include("**/*.ps1")
-                })
+                }
         def violations = []
         sourceFiles.each { sourceFile ->
             sourceFile.eachLine { line, lineNumber ->
