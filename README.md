@@ -21,7 +21,7 @@ single-APK embedded build and runs through llama.cpp in the app process. Unlike
 the Java companion, there is no Nginx proxy or web route: the screen is the
 client and the emulator is the LLM environment.
 
-![AI Anti Fraud 3.0 data flow](docs/diagrams/data-flow.svg)
+![AI Anti Fraud 3.0 data flow](docs/diagrams/data-flow.png)
 
 ![AI Anti Fraud 3.0 investigation sequence](docs/diagrams/sequence.svg)
 
