@@ -45,5 +45,5 @@ python (Join-Path $llamaCpp "convert_lora_to_gguf.py") `
   .\models\text-to-sql-tinyllama-lora
 ```
 
-The adapter is optional, but model inference is not. The base GGUF is always
+The adapter is optional. The base GGUF is always
 required and always remains inside the APK and Android app process.
