@@ -133,6 +133,11 @@ declared `llama.cpp` repository into `third_party/llama.cpp`. The checked-in
 to the Android SDK before invoking the scripts; also keep `java`, `gradle`,
 `adb`, `emulator`, and `sdkmanager` available on `PATH`.
 
+CI checks `third_party/llama.cpp/CMakeLists.txt` after checkout and clones the
+URL from `.gitmodules` when the repository has no registered submodule gitlink.
+Registering the dependency as a real Git submodule is preferred for future
+commits; the CI fallback keeps existing checkouts buildable in the meantime.
+
 For a PowerShell session, the environment setup has this shape (replace the
 example paths with the locations on the development machine):
 

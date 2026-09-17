@@ -22,6 +22,16 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Prepare llama.cpp source
+        run: |
+          if [ ! -f third_party/llama.cpp/CMakeLists.txt ]; then
+            mkdir -p third_party
+            llama_url="$(git config -f .gitmodules --get submodule.third_party/llama.cpp.url)"
+            test -n "$llama_url"
+            git clone --depth 1 "$llama_url" third_party/llama.cpp
+          fi
+          test -f third_party/llama.cpp/CMakeLists.txt
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
