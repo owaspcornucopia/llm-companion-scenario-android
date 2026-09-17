@@ -12,7 +12,7 @@ import java.util.Map;
 
 /**
  * Generates SQL from a question, executes it, and evaluates the result with the decision engine.
- * SQL means Structured Query Language: the database language my ORM-avoiding design exposes to testers.
+ * SQL means Structured Query Language: the database language my ORM-avoiding design to avoid over engineering complexities and reduced maintenance overhead.
  */
 public final class FraudInvestigator {
     private final SqlModel model;
