@@ -27,7 +27,11 @@ client and the emulator is the LLM environment.
 
 DFD template: [OWASP Threat Dragon EoP Games DFD](docs/diagrams/owaspthratdragon.json)
 
-### AI Anti-Fraud 3.0 components
+## Screenshots
+
+<img src="docs/screenshot.png" width="49%" /><img src="docs/screenshot2.png" width="49%" />
+
+## AI Anti-Fraud 3.0 components
 
 - `Android client` renders the fraud question screen, sends the prompt, parses the
   model tool call, and displays the verdict.
