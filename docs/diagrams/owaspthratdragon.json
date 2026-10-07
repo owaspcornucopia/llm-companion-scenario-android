@@ -1889,12 +1889,12 @@
             "id": "7032fda0-ac77-4a91-9a87-86611939a674",
             "parent": "e3ee95fd-241a-4c53-a9a2-b5a63758156e",
             "source": {
-              "cell": "e3ee95fd-241a-4c53-a9a2-b5a63758156e",
-              "port": "6adbe2a2-e721-4696-818e-253c39883861"
-            },
-            "target": {
               "cell": "d1455bd1-d2a1-454b-8002-789f8b5b2562",
               "port": "8f9c8c53-0589-4c70-a1ca-c8ac42b03df6"
+            },
+            "target": {
+              "cell": "e3ee95fd-241a-4c53-a9a2-b5a63758156e",
+              "port": "6adbe2a2-e721-4696-818e-253c39883861"
             },
             "vertices": []
           },
@@ -1922,6 +1922,7 @@
             },
             "visible": true,
             "shape": "store",
+            "zIndex": 17,
             "ports": {
               "groups": {
                 "top": {
@@ -2005,7 +2006,6 @@
               ]
             },
             "id": "4c4f8aae-2050-401d-9441-fb962c5b2b1d",
-            "zIndex": 17,
             "data": {
               "type": "tm.Store",
               "name": "SharedPreferences",
