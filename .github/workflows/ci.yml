@@ -41,8 +41,6 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.7"
 
       - name: Install Android SDK platform
         run: |
@@ -69,10 +67,10 @@ jobs:
             --output models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
 
       - name: Run unit tests and enforce 95 percent instruction coverage
-        run: gradle check
+        run: ./gradlew check
 
       - name: Assemble on-device inference APK
-        run: gradle :app:assembleDebug
+        run: ./gradlew :app:assembleDebug
 
       - name: Verify embedded GGUF asset
         run: |

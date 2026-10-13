@@ -137,11 +137,11 @@ with a missing `third_party/llama.cpp` error. The embedded build script also
 checks this dependency and initializes it automatically. If the checkout has
 the `.gitmodules` URL but no registered Git submodule entry, it downloads the
 declared `llama.cpp` repository into `third_party/llama.cpp`. The checked-in
-`gradlew.bat` is a small launcher and expects Gradle 8.7 to be installed on
-`PATH`. Set
+`gradlew.bat` is a small launcher for the Gradle 9.6.0 version pinned by the
+repository wrapper; no system Gradle installation is required. Set
 `JAVA_HOME` to a JDK 17 installation and `ANDROID_SDK_ROOT` (or `ANDROID_HOME`)
-to the Android SDK before invoking the scripts; also keep `java`, `gradle`,
-`adb`, `emulator`, and `sdkmanager` available on `PATH`.
+to the Android SDK before invoking the scripts; also keep `java`, `adb`,
+`emulator`, and `sdkmanager` available on `PATH`.
 
 CI checks `third_party/llama.cpp/CMakeLists.txt` after checkout and clones the
 URL from `.gitmodules` when the repository has no registered submodule gitlink.
