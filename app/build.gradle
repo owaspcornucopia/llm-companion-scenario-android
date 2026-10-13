@@ -42,7 +42,8 @@ android {
     buildTypes {
         debug {
             debuggable true
-            testCoverageEnabled true
+            enableUnitTestCoverage true
+            enableAndroidTestCoverage true
         }
         release {
             minifyEnabled false
@@ -132,7 +133,7 @@ dependencies {
 }
 
 jacoco {
-    toolVersion = "0.8.12"
+    toolVersion = "0.8.14"
 }
 
 def coverageExclusions = [

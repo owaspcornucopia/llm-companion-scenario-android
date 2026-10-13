@@ -320,8 +320,18 @@ if (-not (Test-Path $apk)) {
     throw "APK is missing: $apk"
 }
 
-$adbStartOutput = & $script:AdbPath start-server 2>&1
+$previousErrorActionPreference = $ErrorActionPreference
+try {
+    $ErrorActionPreference = "Continue"
+    $adbStartOutput = & $script:AdbPath start-server 2>&1
+    $adbStartExitCode = $LASTEXITCODE
+} finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+}
 $adbStartOutput | Out-Host
+if ($adbStartExitCode -ne 0) {
+    throw "ADB server failed to start with exit code $adbStartExitCode."
+}
 $serial = Get-RunningEmulator $AvdName
 if ($serial) {
     $runningResources = Get-GuestResources $serial
